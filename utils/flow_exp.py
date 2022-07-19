@@ -92,6 +92,9 @@ class FlowExp:
 
                         log_prob = None
 
+                    if torch.isnan(z).any():
+                        print(f"NaN detected at step {step} epoch {epoch}")
+                        continue
 
                     if self.config['base'] == "invariant":
                         z = z * mask.unsqueeze(2)
