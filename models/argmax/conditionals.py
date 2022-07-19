@@ -59,9 +59,9 @@ class ConditionalARNet(nn.Module):
         ])
 
         self.mlp = nn.Sequential(
-            nn.LazyLinear(hidden_dim),
+            nn.Linear(num_classes + context_dim, hidden_dim),
             nn.ReLU(),
-            nn.LazyLinear((self.idx[1] - self.idx[0]) * num_classes * 2),
+            nn.Linear(hidden_dim, (self.idx[1] - self.idx[0]) * num_classes * 2),
         )
     # x: B x 9 x 6
     # context: B x 9 x 6

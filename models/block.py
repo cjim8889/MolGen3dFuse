@@ -6,6 +6,7 @@ from survae.transforms.bijections import Bijection
 import torch
 from torch import nn
 from egnn_pytorch import EGNN
+from .argmax.c_gnn import ModifiedEGNN
 
 class ARNet(nn.Module):
     def __init__(self, hidden_dim=32, gnn_size=1, num_classes=6, euclidean_dim=3, idx=(0, 2)):
@@ -17,24 +18,27 @@ class ARNet(nn.Module):
 
         self.net = nn.ModuleList(
             [
-                EGNN(
+                ModifiedEGNN(
                     dim=num_classes,
                     m_dim=hidden_dim, 
                     soft_edges=True,
-                    coor_weights_clamp_value=2., 
+                    coor_weights_clamp_value=1., 
                     num_nearest_neighbors=6, 
                     update_coors=True,
                     update_feats=True,
                     norm_feats=True,
-                    norm_coors=True
+                    norm_coors_constant=1.0,
+                    norm_coors=True,
+                    dropout=0.15,
+                    m_pool_method='sum'
                 ) for _ in range(gnn_size)
             ]
         )
 
         self.mlp = nn.Sequential(
-            nn.LazyLinear(hidden_dim),
+            nn.Linear(num_classes + euclidean_dim, hidden_dim),
             nn.ReLU(),
-            nn.LazyLinear((self.idx[1] - self.idx[0]) * (num_classes + euclidean_dim) * 2),
+            nn.Linear(hidden_dim, (self.idx[1] - self.idx[0]) * (num_classes + euclidean_dim) * 2),
         )
 
     def forward(self, x, mask=None):
