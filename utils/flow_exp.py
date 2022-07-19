@@ -93,8 +93,21 @@ class FlowExp:
                         log_prob = None
 
                     if torch.isnan(z).any():
-                        self.optimiser.zero_grad()
                         step += 1
+
+                        if self.total_logged < 30:
+                            torch.save({
+                                'epoch': epoch,
+                                'step': step,
+                                'model_state_dict': self.network.state_dict(),
+                                'input': input,
+                                'mask': mask,
+                                }, f"model_irregularity_{run.id}_{epoch}_{step}.pt")
+
+                            wandb.save(f"model_irregularity_{run.id}_{epoch}_{step}.pt")
+                            self.total_logged += 1
+                        
+                        self.optimiser.zero_grad()
                         print(f"NaN detected at step {step} epoch {epoch}")
                         continue
 
