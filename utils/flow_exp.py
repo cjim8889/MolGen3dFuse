@@ -85,7 +85,7 @@ class FlowExp:
                     input = torch.cat((x, pos), dim=-1).to(device)
                     mask = batch_data.mask.to(device)
 
-                    self.optimiser.zero_grad(set_to_none=True)
+                    self.optimiser.zero_grad()
                     
                     with autocast(enabled=self.config['autocast']):
                         z, log_det = self.network(input, mask=mask)
@@ -93,6 +93,8 @@ class FlowExp:
                         log_prob = None
 
                     if torch.isnan(z).any():
+                        self.optimiser.zero_grad()
+                        step += 1
                         print(f"NaN detected at step {step} epoch {epoch}")
                         continue
 
