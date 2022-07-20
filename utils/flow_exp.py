@@ -77,6 +77,8 @@ class FlowExp:
                 loss_ep_train = 0
                 self.network.train()
 
+                report_step = 0
+
                 for idx, batch_data in enumerate(self.train_loader):
                     
                     x = batch_data.x[:, :, 0:1]
@@ -104,10 +106,12 @@ class FlowExp:
                                 'mask': mask,
                                 }, f"model_irregularity_{run.id}_{epoch}_{step}.pt")
 
-                            wandb.save(f"model_irregularity_{run.id}_{epoch}_{step}.pt")
+                            wandb.save(f"model_irregularity_z_{run.id}_{epoch}_{step}.pt")
                             self.total_logged += 1
                         
+                        del z, log_det
                         self.optimiser.zero_grad()
+
                         print(f"NaN detected at step {step} epoch {epoch}")
                         continue
 
@@ -159,18 +163,20 @@ class FlowExp:
         
 
                     step += 1
-                    if idx % 10 == 0:
+                    report_step += 1
+
+                    if report_step == 10:
                         ll = (loss_step / 10.).item()
                         print(ll)
                         wandb.log({"epoch": epoch, "NLL": ll}, step=step)
 
                         loss_step = 0
+                        report_step = 0
 
                 if self.scheduler is not None:
                     self.scheduler.step()
                     wandb.log({"Learning Rate/Epoch": self.scheduler.get_last_lr()[0]})
 
-                # gc.collect()
                 wandb.log({"NLL/Epoch": (loss_ep_train / len(self.train_loader)).item()}, step=epoch)
                 if self.config['upload']:
                     if epoch % self.config['upload_interval'] == 0:

@@ -13,10 +13,12 @@ class FuseFlow(Bijection):
         gnn_size=2, 
         encoder_size=2,
         context_dim=16,
+        euclidean_dim=3,
         max_nodes=29) -> None:
         super().__init__()
 
         self.num_classes = num_classes
+        self.euclidean_dim = euclidean_dim
 
         context_net = ContextNet(
             hidden_dim=hidden_dim,
@@ -53,8 +55,7 @@ class FuseFlow(Bijection):
 
 
     def forward(self, x, mask=None, logs=None):
-        categorical = x[:, :, 0:1]
-        continuous = x[:, :, 1:]
+        categorical, continuous = torch.split(x, (1, self.euclidean_dim), dim=-1)
 
         z_cat, log_p_cat = self.surjection(categorical.long().squeeze(2))
 
@@ -63,8 +64,7 @@ class FuseFlow(Bijection):
         return out, log_p_cat
 
     def inverse(self, z, mask=None, logs=None):
-        categorical = z[:, :, 0:self.num_classes]
-        continuous = z[:, :, self.num_classes:]
+        categorical, continuous = torch.split(z, (self.num_classes, self.euclidean_dim), dim=-1)
 
         z_cat, log_p_cat = self.surjection.inverse(categorical)
 
