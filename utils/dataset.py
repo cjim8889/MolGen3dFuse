@@ -27,20 +27,6 @@ class ToDenseAdjV2(BaseTransform):
             edge_attr = data.edge_attr
 
         size = torch.Size([num_nodes, num_nodes] + list(edge_attr.size())[1:])
-        # adj = torch.sparse_coo_tensor(data.edge_index, edge_attr, size)
-
-        # data.orig_adj = adj.to_dense().float()
-        
-        # tmp = torch.ones(data.orig_adj.shape[0], data.orig_adj.shape[1], 1) * 0.5
-
-        # data.orig_adj = torch.cat((data.orig_adj, tmp), dim=-1)
-
-        # data.adj = data.orig_adj.argmax(dim=-1)
-        # data.b_adj = data.adj.clone()
-        # data.b_adj[data.b_adj > 0.] = 1.
-
-        # data.adj = data.adj[torch.triu_indices(9,9).unbind()].long()
-
 
         data.edge_index = None
         data.edge_attr = None
@@ -56,13 +42,10 @@ class ToDenseAdjV2(BaseTransform):
 
             data.x = data.x[..., :6]
 
-            categorical = data.x[..., :-1]
+            categorical = data.x[..., :-1].long()
             ordinal = data.x[..., -1:]
 
-            tmp = torch.ones(categorical.shape[0], 1) * 0.5
-
-            categorical = torch.cat((tmp, categorical), dim=-1).argmax(dim=-1).long()
-
+# Remove 0 as empty with the masking
             data.x = torch.cat([categorical.unsqueeze(1), ordinal], dim=-1)
 
         if data.pos is not None:

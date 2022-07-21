@@ -61,7 +61,7 @@ class FlowExp:
         self.total_logged = 0
 
     def train(self):
-        catagorical = torch.randint(0, 6, (1, 29, 1), dtype=torch.float, device=device)
+        catagorical = torch.randint(0, 5, (1, 29, 1), dtype=torch.float, device=device)
         continuous = torch.randn(1, 29, 3, device=device)
 
         x = torch.cat([catagorical, continuous], dim=-1)
@@ -120,7 +120,7 @@ class FlowExp:
 
                         categorical, continuous = torch.split(
                             z,
-                            [6, 3],
+                            [5, 3],
                             dim=-1
                         )
 

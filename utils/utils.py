@@ -12,6 +12,7 @@ def create_model(config):
             gnn_size=config['gnn_size'], 
             block_size=config['block_size'],
             encoder_size=config['encoder_size'],
+            num_classes=5,
         )
         model = model.to(device)
 

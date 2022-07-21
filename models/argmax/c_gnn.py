@@ -136,8 +136,6 @@ class FullyConnectedGNN(nn.Module):
             mask_j = rearrange(mask, 'b j -> b () j')
             mask = mask_i * mask_j
 
-        
-        if exists(mask):
             m_ij_mask = rearrange(mask, '... -> ... ()')
             m_ij = m_ij.masked_fill(~m_ij_mask, 0.)
         

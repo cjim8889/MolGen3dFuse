@@ -2,6 +2,7 @@ from survae.transforms.surjections import Surjection
 from einops.layers.torch import Rearrange
 from survae.transforms import Softplus
 from torch.nn import functional as F
+from survae.utils import sum_except_batch
 import torch
 from torch import nn
 
@@ -17,8 +18,11 @@ class ContextNet(nn.Module):
             nn.Linear(hidden_dim, context_dim),
         )
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         z = self.embedding(x)
+
+        if mask is not None:
+            z *= mask.unsqueeze(2)
         
         return z
 
@@ -34,7 +38,7 @@ class ArgmaxSurjection(Surjection):
         self.rearrange = Rearrange("B W -> B W 1")
 
     
-    def forward(self, x, mask=None):
+    def forward_old(self, x, mask=None):
         u, log_pu = self.encoder.sample_with_log_prob(context=x)
         
         index = self.rearrange(x)
@@ -54,6 +58,20 @@ class ArgmaxSurjection(Surjection):
         log_pz = log_pu - torch.sum(ldj, dim=[1, 2])
 
         return v, -log_pz
+
+    def forward(self, x, mask=None):
+        u, log_pu = self.encoder.sample_with_log_prob(context=x, mask=mask)
+        onehot = nn.functional.one_hot(x, num_classes=self.num_classes) * mask.unsqueeze(2)
+
+        mask_ = mask.unsqueeze(2)
+
+        T = (onehot * u).sum(-1, keepdim=True)
+        z = onehot * u + mask_ * (1 - onehot) * (T - F.softplus(T - u))
+        ldj = (1 - onehot) * F.logsigmoid(T - u) * mask_
+
+        ldj = sum_except_batch(ldj)
+
+        return z, -(log_pu - ldj)
 
     def inverse(self, z, mask=None):
         return z.argmax(dim=-1), 0.

@@ -1,11 +1,9 @@
 from models.argmax.surjectives import ArgmaxSurjection, ContextNet
-from models.argmax.conditionals import ConditionalBlockFlow, ar_net_init
-from survae.flows import ConditionalInverseFlow
-from survae.distributions import ConditionalNormal
+from models.argmax.conditionals import ConditionalBlockFlow, ar_net_init, MaskedConditionalInverseFlow, MaskedConditionalNormal
 import torch
 from torch import nn
 
-num_classes = 6
+num_classes = 5
 hidden_dim = 64
 context_dim = 16
 encoder_size = 4
@@ -16,7 +14,7 @@ context_net = ContextNet(
     num_classes=num_classes
 )
 
-encoder_base = ConditionalNormal(
+encoder_base = MaskedConditionalNormal(
     nn.Sequential(
         nn.Linear(context_dim, hidden_dim),
         nn.ReLU(),
@@ -30,23 +28,24 @@ transforms = [
         max_nodes=29,
         num_classes=num_classes,
         partition_size=1,
-        ar_net_init=ar_net_init(hidden_dim=hidden_dim, gnn_size=2, context_dim=context_dim),
+        ar_net_init=ar_net_init(hidden_dim=hidden_dim, num_classes=num_classes, gnn_size=2, context_dim=context_dim),
     ) for _ in range(encoder_size)
 ]
-inverse = ConditionalInverseFlow(
+inverse = MaskedConditionalInverseFlow(
     encoder_base, 
     transforms=transforms,
     context_init=context_net
 )
 
-surjection = ArgmaxSurjection(inverse, num_classes=6)
+surjection = ArgmaxSurjection(inverse, num_classes=num_classes)
 
-feats = torch.randint(0, 6, (1, 29))
+feats = torch.randint(0, 5, (1, 29))
+mask = torch.ones(1, 29, dtype=torch.bool)
+mask[:, -2:] = False
 
-print(feats)
-z, log_p = surjection(feats)
+z, log_p = surjection.forward(feats, mask=mask)
 
-print(z)
+print(log_p)
 
-feats_r, _ = surjection.inverse(z)
-print(feats_r)
+# z_p, log_p_p = surjection.forward_new(feats)
+# print(log_p_p)

@@ -2,7 +2,7 @@ from models.flow import Flow
 import torch
 
 
-catagorical = torch.randint(0, 6, (1, 29, 1), dtype=torch.float)
+catagorical = torch.randint(0, 5, (1, 29, 1), dtype=torch.float)
 continuous = torch.randn(1, 29, 3)
 
 
@@ -16,14 +16,14 @@ net = Flow(
     gnn_size=2,
     block_size=2,
     max_nodes=29,
-    num_classes=6,
+    num_classes=5,
     encoder_size=2
 )
 
 
-out, _ = net(x, mask=mask)
+out, log_p = net(x, mask=mask)
 
 x_re, _ = net.inverse(out, mask=mask)
-
+print(x, x_re, log_p)
 
 

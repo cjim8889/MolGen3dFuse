@@ -33,10 +33,10 @@ if __name__ == "__main__":
     )
 
     net.load_state_dict(
-        torch.load("outputs/model_irregularity_31gk3i0z_4_3747.pt", map_location="cpu")["model_state_dict"]
+        torch.load("outputs/model_checkpoint_1cl8yjqo_10.pt", map_location="cpu")["model_state_dict"]
     )
 
-    batch_size = 1000
+    batch_size = 3000
     mask = torch.ones(batch_size, 29).to(torch.bool)
     mask_size = torch.randint(3, 29, (batch_size,))
     
@@ -82,13 +82,13 @@ if __name__ == "__main__":
             for mol in mols:
                 smiles = Chem.MolToSmiles(mol)
 
-                # if "." in smiles:
-                    # continue
-                # else:
-                valid += 1
-                valid_smiles.append(smiles)
-                valid_mols.append(mol)
-                break
+                if "." in smiles:
+                    continue
+                else:
+                    valid += 1
+                    valid_smiles.append(smiles)
+                    valid_mols.append(mol)
+                    break
         except:
             pass
 
