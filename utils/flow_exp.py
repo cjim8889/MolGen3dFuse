@@ -190,6 +190,8 @@ class FlowExp:
                     if step % 200 == 0:
                         with torch.no_grad():
                             xh, _ = self.network.inverse(test_z, mask=test_mask)
+                            xh = xh.to("cpu")
+                            
                             atoms_types, pos = torch.split(xh, [1, 3], dim=-1)
 
                             for idx in range(atoms_types.shape[0]):
