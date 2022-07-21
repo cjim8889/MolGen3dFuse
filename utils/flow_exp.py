@@ -191,7 +191,7 @@ class FlowExp:
                         with torch.no_grad():
                             xh, _ = self.network.inverse(test_z, mask=test_mask)
                             xh = xh.to("cpu")
-                            
+
                             atoms_types, pos = torch.split(xh, [1, 3], dim=-1)
 
                             for idx in range(atoms_types.shape[0]):
@@ -202,7 +202,7 @@ class FlowExp:
                                     positions=p,
                                     atom_type=aty,
                                     spheres_3d=False,
-                                    save_path=f"{run.id}_{epoch}_{idx}.png"
+                                    save_path=f"{run.id}_{epoch}_{step}_{idx}.png"
                                 )
 
                             wandb.log(
