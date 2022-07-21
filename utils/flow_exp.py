@@ -8,7 +8,9 @@ import torch
 import numpy as np
 from torch import nn
 from torch.cuda.amp import GradScaler, autocast
-import gc
+from .visualise import plot_data3d
+
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # @torch.jit.script
@@ -68,6 +70,18 @@ class FlowExp:
 
         self.network(x, mask=torch.ones(1, 29, device=device, dtype=torch.bool))
         print(f"Model Parameters: {sum([p.numel() for p in self.network.parameters()])}")
+
+        images_size = 8
+        test_mask = torch.ones(images_size, 29, dtype=torch.bool, device=device)
+        mask_size = torch.randint(3, 29, (images_size,))
+        
+        for idx in range(images_size):
+            test_mask[idx, mask_size[idx]:] = False
+
+        categorical = torch.randn(images_size, 29, 5, device=device)
+        continuous = remove_mean_with_mask(torch.randn(images_size, 29, 3, device=device), test_mask)
+
+        test_z = torch.cat((categorical * test_mask.unsqueeze(2), continuous), dim=-1)
 
         scaler = GradScaler()
         with wandb.init(project="molecule-flow-3d", config=self.config, entity="iclac") as run:
@@ -173,9 +187,36 @@ class FlowExp:
                         loss_step = 0
                         report_step = 0
 
+                    if step % 200 == 0:
+                        with torch.no_grad():
+                            xh, _ = self.network.inverse(test_z, mask=test_mask)
+                            atoms_types, pos = torch.split(xh, [1, 3], dim=-1)
+
+                            for idx in range(atoms_types.shape[0]):
+                                aty = atoms_types[idx].long().view(-1).numpy()
+                                p = pos[idx].view(-1, 3).numpy()
+                                
+                                plot_data3d(
+                                    positions=p,
+                                    atom_type=aty,
+                                    spheres_3d=False,
+                                    save_path=f"{run.id}_{epoch}_{idx}.png"
+                                )
+
+                            wandb.log(
+                                {
+                                    "epoch": epoch,
+                                    "image": [
+                                        wandb.Image(f"{run.id}_{epoch}_{step}_{idx}.png") for idx in range(atoms_types.shape[0])
+                                    ]
+                                },
+                                step=step
+                            )
+
                 if self.scheduler is not None:
                     self.scheduler.step()
                     wandb.log({"Learning Rate/Epoch": self.scheduler.get_last_lr()[0]})
+                
 
                 wandb.log({"NLL/Epoch": (loss_ep_train / len(self.train_loader)).item()}, step=epoch)
                 if self.config['upload']:
