@@ -42,11 +42,12 @@ class ToDenseAdjV2(BaseTransform):
 
             data.x = data.x[..., :6]
 
-            categorical = data.x[..., :-1].long()
+            categorical = data.x[..., :-1].argmax(dim=-1, keepdim=True)
             ordinal = data.x[..., -1:]
 
 # Remove 0 as empty with the masking
-            data.x = torch.cat([categorical.unsqueeze(1), ordinal], dim=-1)
+            # print(categorical.shape, ordinal.shape)
+            data.x = torch.cat([categorical, ordinal], dim=-1)
 
         if data.pos is not None:
             size = [num_nodes - data.pos.size(0)] + list(data.pos.size())[1:]
@@ -71,8 +72,8 @@ def get_datasets(type="mqm9", batch_size=128, shuffle=True, num_workers=4):
         transform = T.Compose([ToDenseAdjV2(num_nodes=29)])
         dataset = ModifiedQM9(root="./mqm9-datasets", pre_transform=transform)
 
-        transformed_x = dataset.data.x[:, :6]
-        dataset.data.x = transformed_x
+        # transformed_x = dataset.data.x[:, :6]
+        # dataset.data.x = transformed_x
 
     train_loader = ModifiedDenseDataLoader(dataset[:int(len(dataset) * 0.8)], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, pin_memory=False)
     test_loader = ModifiedDenseDataLoader(dataset[int(len(dataset) * 0.8):], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, pin_memory=False)
