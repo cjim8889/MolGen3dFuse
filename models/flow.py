@@ -12,7 +12,8 @@ class Flow(nn.Module):
         block_size=6,
         max_nodes=29,
         num_classes=6,
-        encoder_size=4
+        encoder_size=4,
+        no_constraint=False,
     ) -> None:
 
         super().__init__()
@@ -24,7 +25,8 @@ class Flow(nn.Module):
                 gnn_size=gnn_size,
                 encoder_size=encoder_size,
                 context_dim=16,
-                max_nodes=max_nodes
+                max_nodes=max_nodes,
+                no_constraint=no_constraint
             )
         ])
 
@@ -33,7 +35,8 @@ class Flow(nn.Module):
                 num_classes=num_classes,
                 euclidean_dim=3,
                 partition_size=3,
-                max_nodes=max_nodes, 
+                max_nodes=max_nodes,
+                no_constraint=no_constraint,
                 ar_net_init=ar_net_init(hidden_dim=hidden_dim, gnn_size=gnn_size, num_classes=num_classes, euclidean_dim=3)
             ) for _ in range(block_size)
         ]
@@ -44,6 +47,7 @@ class Flow(nn.Module):
                 euclidean_dim=3,
                 partition_size=2,
                 max_nodes=max_nodes, 
+                no_constraint=no_constraint,
                 ar_net_init=ar_net_init(hidden_dim=hidden_dim, gnn_size=gnn_size, num_classes=num_classes, euclidean_dim=3)
             ) for _ in range(2)
         ]

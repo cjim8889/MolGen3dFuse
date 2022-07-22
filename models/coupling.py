@@ -5,14 +5,16 @@ import torch
 from torch import nn
 
 class MaskedCouplingFlow(Bijection):
-    def __init__(self, ar_net, mask, last_dimension=3, split_dim=-1):
+    def __init__(self, ar_net, mask, no_constraint=False, last_dimension=3, split_dim=-1):
         super(MaskedCouplingFlow, self).__init__()
         
         self.ar_net = ar_net
         self.split_dim = split_dim
-        
+        self.no_constraint = no_constraint
         self.register_buffer("mask", mask)
-        self.scaling_factor = nn.Parameter(torch.zeros(last_dimension))
+
+        if not self.no_constraint:
+            self.scaling_factor = nn.Parameter(torch.zeros(last_dimension))
 
     def forward(self, x, mask=None, logs=None):
         return self._transform(x, mask=mask, forward=True, logs=logs)
@@ -27,9 +29,11 @@ class MaskedCouplingFlow(Bijection):
 
         alpha, beta = self.ar_net(z_masked, mask=mask).chunk(2, dim=self.split_dim)
 
-        # scaling factor idea inspired by UvA github to stabilise training 
-        scaling_factor = self.scaling_factor.exp().view(1, 1, -1)
-        alpha = torch.tanh(alpha / scaling_factor) * scaling_factor
+        if not self.no_constraint:
+            # scaling factor idea inspired by UvA github to stabilise training 
+            scaling_factor = self.scaling_factor.exp().view(1, 1, -1)
+            alpha = torch.tanh(alpha / scaling_factor) * scaling_factor
+        
         
         alpha = alpha * ~self_mask
         beta = beta * ~self_mask

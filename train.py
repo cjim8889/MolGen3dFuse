@@ -28,6 +28,7 @@ parser.add_argument("--upload_interval", help="Upload to wandb every n epochs", 
 parser.add_argument("--autocast", help="Autocast", type=int, default=0)
 parser.add_argument("--loadfrom", help="Load from checkpoint", type=str, default=None)
 parser.add_argument("--no_opt", help="No optimiser", type=int, default=0)
+parser.add_argument("--no_constraint", help="No constraint", type=int, default=0)
 
 # parser.add_argument("--encoder_size", help="Encoder Size for Vert Net", type=int, default=2)
 parser.add_argument("--classifier", help="Classifier", type=str, default=None)
@@ -67,6 +68,7 @@ if __name__ == "__main__":
             loadfrom=args.loadfrom,
             autocast=args.autocast != 0,
             no_opt=args.no_opt == 0,
+            no_constraint=args.no_constraint == 1,
             encoder_size=args.encoder_size,
         )
 

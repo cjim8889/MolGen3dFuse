@@ -9,7 +9,13 @@ from egnn_pytorch import EGNN
 from .argmax.c_gnn import ModifiedEGNN
 
 class ARNet(nn.Module):
-    def __init__(self, hidden_dim=32, gnn_size=1, num_classes=6, euclidean_dim=3, idx=(0, 2)):
+    def __init__(self, 
+        hidden_dim=32, 
+        gnn_size=1, 
+        num_classes=6, 
+        euclidean_dim=3, 
+        idx=(0, 2)
+    ):
         super().__init__()
 
         self.num_classes = num_classes
@@ -72,6 +78,7 @@ class CouplingBlockFlow(Bijection):
         ar_net_init=ar_net_init(hidden_dim=64, num_classes=6, gnn_size=1),
         mask_init=create_mask_equivariant,
         max_nodes=29,
+        no_constraint=False,
         partition_size=2
     ):
         
@@ -82,7 +89,7 @@ class CouplingBlockFlow(Bijection):
             ar_net = ar_net_init((idx, min(idx + partition_size, max_nodes)))
             mask = mask_init([i for i in range(idx, min(idx + partition_size, max_nodes))], max_nodes)
             
-            tr = MaskedCouplingFlow(ar_net, mask=mask, last_dimension=num_classes + euclidean_dim, split_dim=-1)
+            tr = MaskedCouplingFlow(ar_net, mask=mask, no_constraint=no_constraint, last_dimension=num_classes + euclidean_dim, split_dim=-1)
             
             self.transforms.append(tr)
 

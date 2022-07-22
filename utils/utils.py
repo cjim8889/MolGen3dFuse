@@ -13,6 +13,7 @@ def create_model(config):
             block_size=config['block_size'],
             encoder_size=config['encoder_size'],
             num_classes=5,
+            no_constraint=config['no_constraint']
         )
         model = model.to(device)
 

@@ -110,13 +110,16 @@ class MaskedConditionalNormal(ConditionalDistribution):
 
 
 class MaskedConditionalCouplingFlow(ConditionalBijection):
-    def __init__(self, ar_net, mask, split_dim=-1, last_dimension=6):
+    def __init__(self, ar_net, mask, split_dim=-1, no_constraint=False, last_dimension=6):
         super(MaskedConditionalCouplingFlow, self).__init__()
         
         self.ar_net = ar_net
-
+        self.no_constraint = no_constraint
         self.register_buffer("mask", mask.unsqueeze(2))
-        self.scaling_factor = nn.Parameter(torch.zeros(last_dimension))
+        
+        if not self.no_constraint:
+            self.scaling_factor = nn.Parameter(torch.zeros(last_dimension))
+
         self.split_dim = split_dim
 
     def forward(self, x, context, mask=None):
@@ -129,10 +132,10 @@ class MaskedConditionalCouplingFlow(ConditionalBijection):
         z_masked = z * self.mask
         alpha, beta = self.ar_net(z_masked, context, mask=mask).chunk(2, dim=self.split_dim)
 
-        # scaling factor idea inspired by UvA github to stabilise training 
-        scaling_factor = self.scaling_factor.exp().view(1, 1, -1)
-
-        alpha = torch.tanh(alpha / scaling_factor) * scaling_factor
+        if not self.no_constraint:
+            # scaling factor idea inspired by UvA github to stabilise training 
+            scaling_factor = self.scaling_factor.exp().view(1, 1, -1)
+            alpha = torch.tanh(alpha / scaling_factor) * scaling_factor
 
         alpha = alpha * ~self.mask
         beta = beta * ~self.mask
@@ -202,6 +205,7 @@ class ConditionalBlockFlow(ConditionalBijection):
             max_nodes=9,
             num_classes=6,
             partition_size=1,
+            no_constraint=False,
             mask_init=create_mask_equivariant,
             split_dim=-1):
 
@@ -212,7 +216,7 @@ class ConditionalBlockFlow(ConditionalBijection):
             ar_net = ar_net_init((idx, min(idx + partition_size, max_nodes)))
             mask = mask_init([i for i in range(idx, min(idx + partition_size, max_nodes))], max_nodes)
 
-            tr = MaskedConditionalCouplingFlow(ar_net, mask=mask, split_dim=split_dim, last_dimension=num_classes)
+            tr = MaskedConditionalCouplingFlow(ar_net, mask=mask, split_dim=split_dim, no_constraint=no_constraint, last_dimension=num_classes)
             self.transforms.append(tr)
         
        

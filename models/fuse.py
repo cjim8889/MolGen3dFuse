@@ -12,6 +12,7 @@ class FuseFlow(Bijection):
         gnn_size=2, 
         encoder_size=2,
         context_dim=16,
+        no_constraint=False,
         euclidean_dim=3,
         max_nodes=29) -> None:
         super().__init__()
@@ -39,6 +40,7 @@ class FuseFlow(Bijection):
                 max_nodes=max_nodes,
                 num_classes=num_classes,
                 partition_size=2,
+                no_constraint=no_constraint,
                 ar_net_init=ar_net_init(hidden_dim=hidden_dim, num_classes=num_classes, gnn_size=gnn_size, context_dim=context_dim),
             ) for _ in range(encoder_size)
         ]
