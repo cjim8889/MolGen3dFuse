@@ -32,7 +32,7 @@ class Flow(nn.Module):
             CouplingBlockFlow(
                 num_classes=num_classes,
                 euclidean_dim=3,
-                partition_size=2,
+                partition_size=3,
                 max_nodes=max_nodes, 
                 ar_net_init=ar_net_init(hidden_dim=hidden_dim, gnn_size=gnn_size, num_classes=num_classes, euclidean_dim=3)
             ) for _ in range(block_size)
@@ -42,10 +42,10 @@ class Flow(nn.Module):
             CouplingBlockFlow(
                 num_classes=num_classes,
                 euclidean_dim=3,
-                partition_size=1,
+                partition_size=2,
                 max_nodes=max_nodes, 
                 ar_net_init=ar_net_init(hidden_dim=hidden_dim, gnn_size=gnn_size, num_classes=num_classes, euclidean_dim=3)
-            ) for _ in range(1)
+            ) for _ in range(2)
         ]
 
     def forward(self, x, mask=None, logs=None):

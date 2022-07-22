@@ -38,19 +38,19 @@ class FuseFlow(Bijection):
             ConditionalBlockFlow(
                 max_nodes=max_nodes,
                 num_classes=num_classes,
-                partition_size=1,
-                ar_net_init=ar_net_init(hidden_dim=hidden_dim, num_classes=num_classes, gnn_size=gnn_size, context_dim=context_dim),
-            ) for _ in range(1)
-        ]
-
-        transforms += [
-            ConditionalBlockFlow(
-                max_nodes=max_nodes,
-                num_classes=num_classes,
                 partition_size=2,
                 ar_net_init=ar_net_init(hidden_dim=hidden_dim, num_classes=num_classes, gnn_size=gnn_size, context_dim=context_dim),
             ) for _ in range(encoder_size)
         ]
+
+        # transforms += [
+        #     ConditionalBlockFlow(
+        #         max_nodes=max_nodes,
+        #         num_classes=num_classes,
+        #         partition_size=2,
+        #         ar_net_init=ar_net_init(hidden_dim=hidden_dim, num_classes=num_classes, gnn_size=gnn_size, context_dim=context_dim),
+        #     ) for _ in range(encoder_size)
+        # ]
 
 
         inverse = MaskedConditionalInverseFlow(
