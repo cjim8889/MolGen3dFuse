@@ -25,6 +25,11 @@ def remove_mean_with_mask(x, node_mask):
 
 
 if __name__ == "__main__":
+
+    # train_loader, test_loader = get_datasets(
+    #     type="mqm9",
+    #     batch_size=1000,
+    # )
     net = Flow(
         hidden_dim=32,
         gnn_size=1,
